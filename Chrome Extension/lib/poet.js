@@ -1,5 +1,6 @@
 function displayPoem() {
-  alert(writePoem("rhyme"));
+  alert(chrome.storage.sync.get('poemType', function(items) {console.log(items.poemType); return(items.poemType);}));
+  alert(writePoem(chrome.storage.sync.get('poemType', function(items) {console.log(items.poemType); return(items.poemType);})));
 }
 
 function getText() {
@@ -19,24 +20,20 @@ function getText() {
 
 function writePoem(type){
 	var text = getText();
-	var textFilt = text.replace(/(\r\n|\n|\r)/gm," ").toLowerCase().replace(/[a-z]\./gm,"");     //filter non alpha-characters, make it all lowercase	
+	var textFilt = text.replace(/(\r\n|\n|\r)/gm,' ').replace(/[^0-9a-z]\s/gi, ' ').toLowerCase();     //filter non alpha-characters, make it all lowercase	
 	var textList = textFilt.split(" ");
 	var phones = new Array(), syllableCounts = new Array(), output = new Array();
-		
-	console.log("Finding phones");													// Get phonetics for each word
-	console.log(textList.length);
-	for(i = 0; i < textList.length; i++){
-		if (i%100 ==0){console.log(i);}
-		if (pronouncing.phonesForWord(textList[i])){		 
-			phones[i] = (pronouncing.phonesForWord(textList[i]))[0];
-		}
-		else{
-			phones[i] = ('0');
-		}
+
+	var len = textList.length;
+
+	if(len >= 1500){
+		return("Please select a shorter text for the web-version or use the Python version instead.")
 	}
-	for(i = 0; i < phones.length; i++){                                       //Get syllables for each phonetic
-		if (phones[i] != '0'){
-			syllableCounts[i] = (pronouncing.syllableCount(phones[i]));
+	
+	for(i = 0; i < len; i++){                                       //Get syllables for each phonetic
+		if (pronouncing.phonesForWord(textList[i])){
+			if (i%100 ==0){console.log(i);}
+			syllableCounts[i] = (pronouncing.syllableCount(pronouncing.phonesForWord(textList[i])[0]));
 		}
 		else{
 			syllableCounts[i] = (0);
@@ -55,26 +52,22 @@ function writePoem(type){
 			
 			var k = 0;
 			if(Array.from(rhymeCouple).length != 0){
-				while(textList.indexOf((Array.from(rhymeCouple))[k]) == -1){
+				while(textList.indexOf == -1){
 					k = k+1;
 				}
-				if(rhymePairs.indexOf((Array.from(rhymeCouple))[k]) == -1){  //If there is another word in the text that rhymes with it
+				if(rhymePairs.indexOf(textList[(textList.indexOf((Array.from(rhymeCouple))[k]))-2] + ' ' + textList[(textList.indexOf((Array.from(rhymeCouple))[k]))-1] + ' ' + textList[textList.indexOf((Array.from(rhymeCouple))[k])]) == -1){  //If there is another word in the text that rhymes with it
 					rhymePairs.push(textList[x-2] + ' ' + textList[x-1] + ' ' + textList[x]);                          //Write the pair to the rhymePairs list
 					rhymePairs.push(textList[(textList.indexOf((Array.from(rhymeCouple))[k]))-2] + ' ' + textList[(textList.indexOf((Array.from(rhymeCouple))[k]))-1] + ' ' + textList[textList.indexOf((Array.from(rhymeCouple))[k])]);
 				}
 			}
 		}
-		console.log(rhymePairs);
 		for(i = 0; i < 8; i++){        
 			var lineSyllablesPair = Math.floor((Math.random() * 7) + 4);               //Make them a random syllable length (can change this later)***
-			console.log("Linesyllables Pair = " + lineSyllablesPair);
 			for(j = 0; j < 2; j++){                                     //For 16 lines:
 				var lineSyllables = lineSyllablesPair;
 				var index = Math.floor((Math.random() * textList.length) + 1);                       //Fill lines with random words
-				while(lineSyllables > 0){  
-					console.log(lineSyllables);				
-					if((syllableCounts[index] != 0) && (syllableCounts[index] != "undefined")){  
-						console.log("Syllable of word is " + syllableCounts[index])
+				while(lineSyllables > 0){  					
+					if((syllableCounts[index] != 0) && (typeof syllableCounts[index] != "undefined")){  
 						output.push(' ' + textList[index]);
 						lineSyllables = lineSyllables - syllableCounts[index];
 					}
@@ -100,7 +93,7 @@ function writePoem(type){
 			var index = Math.floor((Math.random() * syllableCounts.length) + 1);            //Fill line with random words until syllables are full.
 			while (lineSyllables > 0){
 				if(syllableCounts[index] <= lineSyllables && syllableCounts[index] != 0){
-					if (output.indexOf(textList[index]) == -1){// & textList[index] not in stop_word_set){  //If the word chosen is non-stop word, 
+					if (output.indexOf(textList[index]) == -1 && textList[index].isStopWord == false){  //If the word chosen is non-stop word, 
 						output.push(textList[index] + ' ');                                      // Use it to start a phrase
 						lineSyllables = lineSyllables - syllableCounts[index];
 					}
@@ -133,6 +126,7 @@ function writePoem(type){
 			}
 		}
 	}
+	else{output.push("Please select valid poem type in options menu");}
 	return output.join(""); 
 }
 displayPoem();	

@@ -1,9 +1,11 @@
 {
-  "name": "My extension",
+  "name": "Capstone - Generative Poetry",
   "manifest_version": 2,
   "version": "0.1",
+  "options_page": "options.html",
   "permissions": [
-    "activeTab"
+    "activeTab",
+	"storage"
   ],
   "background": {
     "scripts": [
